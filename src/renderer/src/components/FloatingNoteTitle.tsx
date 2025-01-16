@@ -4,8 +4,8 @@ import { useAtomValue } from 'jotai'
 import { selectedNoteAtom } from '@renderer/store'
 
 export const FloatingNoteTitle = ({ className, ...props }: ComponentProps<'div'>) => {
-    const selectedNote = useAtomValue(selectedNoteAtom)
-    const title = selectedNote?.title|| 'Note Title'
+  const selectedNote = useAtomValue(selectedNoteAtom)
+  const title = selectedNote?.title || 'Note Title'
 
   return (
     <div className={twMerge('flex justify-center', className)} {...props}>

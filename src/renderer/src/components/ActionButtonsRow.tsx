@@ -7,9 +7,8 @@ export const ActionButtonsRow = ({ ...props }: ComponentProps<'div'>) => {
   const [notes, setNotes] = useAtom(notesAtom)
 
   return (
-    
     <div {...props}>
-      <NewNoteButton  />
+      <NewNoteButton />
       <DeleteNoteButton />
     </div>
   )

@@ -1,7 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { createNote, deleteNote, getNotes, readNote, writeNote } from './lib'
 import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '../shared/types'
 
@@ -18,7 +17,6 @@ function createWindow(): void {
     vibrancy: 'under-window',
     titleBarStyle: 'hidden',
     trafficLightPosition: { x: 15, y: 10 },
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true, 

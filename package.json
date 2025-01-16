@@ -1,5 +1,12 @@
 {
   "name": "notes-app",
+  "mac": {
+    "icon": "./public/icons/mac/icon.icns",    
+    "category": "public.app-category.utilities"
+  },
+  "win": {
+    "icon": "./public/icons/png/256x256.png" 
+  },
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
@@ -55,5 +62,16 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.5.2",
     "vite": "^5.3.1"
+  },
+  "build": {
+    "mac": {
+      "icon": "resources/mac/icon.icns"
+    },
+    "win": {
+      "icon": "resources/icon.ico"
+    },
+    "linux": {
+      "icon": "resources/icon.png"
+    }
   }
 }

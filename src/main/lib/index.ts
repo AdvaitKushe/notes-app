@@ -7,130 +7,119 @@ import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '../../sha
 import { dialog } from 'electron'
 import path from 'path'
 import { isEmpty } from 'lodash'
-import  welcomeNoteFile  from '../../../resources/welcomeNote.md?asset'
+import welcomeNoteFile from '../../../resources/welcomeNote.md?asset'
 
 export const getRootDir = () => {
-    return `${homedir()}/${appDirectoryName}`
+  return `${homedir()}/${appDirectoryName}`
 }
 
 export const getNotes: GetNotes = async () => {
-    const rootDir = getRootDir()
+  const rootDir = getRootDir()
 
-    await ensureDir(rootDir)
+  await ensureDir(rootDir)
 
-    const notesFileNames = await readdir(rootDir, {
-        encoding: fileEncoding,
-        withFileTypes: false 
+  const notesFileNames = await readdir(rootDir, {
+    encoding: fileEncoding,
+    withFileTypes: false
+  })
 
-    })
+  const notes = notesFileNames.filter((file) => file.endsWith('.md'))
 
-    const notes = notesFileNames.filter(file => file.endsWith('.md'))
-    
-    if (isEmpty(notes)) {
+  if (isEmpty(notes)) {
+    console.log('welcome note')
+    const welcomeNote = await readFile(welcomeNoteFile, { encoding: fileEncoding })
+    await writeFile(`${rootDir}/${welcomeNoteFileName}`, welcomeNote, { encoding: fileEncoding })
+    notes.push(welcomeNoteFileName)
+  }
 
-        console.log('welcome note')
-        const welcomeNote = await readFile(welcomeNoteFile, {encoding: fileEncoding})
-        await writeFile(`${rootDir}/${welcomeNoteFileName}`, welcomeNote, {encoding: fileEncoding})
-        notes.push(welcomeNoteFileName)
-
-    }
-
-    
-    return Promise.all(notes.map(getNoteInfoFromFileName))
+  return Promise.all(notes.map(getNoteInfoFromFileName))
 }
 
 export const getNoteInfoFromFileName = async (fileName: string): Promise<NoteInfo> => {
-    const rootDir = getRootDir()
+  const rootDir = getRootDir()
 
-    const fileStat = await stat(`${rootDir}/${fileName}`)
+  const fileStat = await stat(`${rootDir}/${fileName}`)
 
-    const noteInfo: NoteInfo = {
-        title: fileName.replace(/\.md$/, ''),
-        lastEditTime: fileStat.mtimeMs
-    }
-    console.log(fileName)
-    return noteInfo
+  const noteInfo: NoteInfo = {
+    title: fileName.replace(/\.md$/, ''),
+    lastEditTime: fileStat.mtimeMs
+  }
+  console.log(fileName)
+  return noteInfo
 }
 
+export const readNote: ReadNote = async (fileName) => {
+  const rootDir = getRootDir()
 
-export const readNote : ReadNote = async (fileName) => {
-    const rootDir = getRootDir()
-
-    return readFile(`${rootDir}/${fileName}.md`, {encoding:fileEncoding})
-
-
+  return readFile(`${rootDir}/${fileName}.md`, { encoding: fileEncoding })
 }
 
 export const writeNote: WriteNote = async (filename, content) => {
-    const rootDir = getRootDir()
-    await ensureDir(rootDir)
+  const rootDir = getRootDir()
+  await ensureDir(rootDir)
 
-    console.log(`writing note $(filename)`)
+  console.log(`writing note $(filename)`)
 
-    return writeFile(`${rootDir}/${filename}.md`, content, {encoding: fileEncoding})
+  return writeFile(`${rootDir}/${filename}.md`, content, { encoding: fileEncoding })
 }
 
 export const createNote: CreateNote = async () => {
-    const rootDir = getRootDir()
+  const rootDir = getRootDir()
 
-    await ensureDir(rootDir)
-    
-    const {filePath, canceled} = await dialog.showSaveDialog({
-        title: 'Create Note',
-        defaultPath: `${rootDir}/Untitled.md`,
-        buttonLabel: 'Create',
-        properties: ['showOverwriteConfirmation'],
-        showsTagField: false,
-        filters: [
-            {name: 'Markdown', extensions: ['md']}
-        ]
+  await ensureDir(rootDir)
+
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Create Note',
+    defaultPath: `${rootDir}/Untitled.md`,
+    buttonLabel: 'Create',
+    properties: ['showOverwriteConfirmation'],
+    showsTagField: false,
+    filters: [{ name: 'Markdown', extensions: ['md'] }]
+  })
+
+  if (canceled || !filePath) {
+    console.log('create note canceled')
+    return false
+  }
+
+  const { name: fileName, dir: parentDir } = path.parse(filePath)
+
+  if (parentDir !== rootDir) {
+    await dialog.showMessageBox({
+      type: 'error',
+      title: 'Invalid directory',
+      message: `Please select a directory within ${rootDir}`
     })
+    return false
+  }
 
-    if (canceled || !filePath) {
-        console.log('create note canceled')
-        return false
-    }
+  await writeFile(filePath, '', { encoding: fileEncoding })
 
-    const {name: fileName, dir:parentDir} = path.parse(filePath)
-
-    if (parentDir !== rootDir) {
-        await dialog.showMessageBox({
-            type:'error',
-            title: 'Invalid directory',
-            message: `Please select a directory within ${rootDir}`
-        })
-        return false
-    }
-
-    await writeFile(filePath, '', {encoding: fileEncoding})
-
-    return fileName
-
-
+  return fileName
 }
 
 export const deleteNote: DeleteNote = async (title) => {
-    const rootDir = getRootDir()
+  const rootDir = getRootDir()
 
-    await ensureDir(rootDir)
+  await ensureDir(rootDir)
 
-    const {response} = await dialog.showMessageBox({
-        type: 'warning',
-        title: 'Delete Note',
-        message: `Are you sure you want to delete ${title}?`,
-        detail: 'This action cannot be undone.',
-        buttons: ['Cancel', 'Delete'],
-        defaultId: 1,
-        cancelId: 0
-    })
+  const { response } = await dialog.showMessageBox({
+    type: 'warning',
+    title: 'Delete Note',
+    message: `Are you sure you want to delete ${title}?`,
+    detail: 'This action cannot be undone.',
+    buttons: ['Cancel', 'Delete'],
+    defaultId: 1,
+    cancelId: 0
+  })
 
-    if (response === 0) {
-        console.log('delete note canceled')
-        return false
-    }
+  if (response === 0) {
+    console.log('delete note canceled')
+    return false
+  }
 
-    console.log(`deleting note ${title}`)
-    await remove(`${rootDir}/${title}.md`)
+  console.log(`deleting note ${title}`)
+  await remove(`${rootDir}/${title}.md`)
 
-    return true
+  return true
 }

@@ -1,11 +1,11 @@
 declare global {
   interface Window {
-   // electron: ElectronAPI
+    // electron: ElectronAPI
     //api: unknown
-    context:{
-      locale:string,
-      getNotes: GetNotes,
-      readNote: ReadNote,
+    context: {
+      locale: string
+      getNotes: GetNotes
+      readNote: ReadNote
       writeNote: WriteNote
     }
   }
